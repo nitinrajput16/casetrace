@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ComplaintStatus {
+  OPEN
+  ACTIVE
+  NEGLECTED
+  RESOLVED
+  CLOSED
+}
+
+model User {
+  id        String     @id @default(uuid())
+  phone     String     @unique
+  name      String?
+  createdAt DateTime   @default(now())
+  complaints Complaint[]
+}
+
+model Complaint {
+  id              String            @id @default(uuid())
+  complaintId     String            @unique
+  user            User?             @relation(fields: [userId], references: [id])
+  userId          String?
+  title           String
+  description     String?
+  status          ComplaintStatus   @default(OPEN)
+  assignedOfficer String?
+  officerPhone    String?
+  policeStation   String?
+  district        String?
+  filedAt         DateTime
+  lastUpdateAt    DateTime
+  updates         CaseUpdate[]
+  escalations     EscalationAlert[]
+}
+
+model CaseUpdate {
+  id          String    @id @default(uuid())
+  complaint   Complaint @relation(fields: [complaintId], references: [id])
+  complaintId String
+  updateText  String
+  updatedBy   String?
+  createdAt   DateTime  @default(now())
+}
+
+model EscalationAlert {
+  id          String    @id @default(uuid())
+  complaint   Complaint @relation(fields: [complaintId], references: [id])
+  complaintId String
+  reason      String
+  isResolved  Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  notifiedTo  String?
+}
